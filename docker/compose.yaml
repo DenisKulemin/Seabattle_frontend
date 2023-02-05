@@ -1,0 +1,11 @@
+version: "3.7"
+
+services:
+  seabattle-front:
+    build:
+      context: ./../
+      dockerfile: docker/Dockerfile
+    volumes:
+      - ./../:/home/app
+    ports:
+      - "8081:8081"
