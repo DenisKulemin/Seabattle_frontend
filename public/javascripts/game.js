@@ -6,7 +6,7 @@
 
 // import { fileURLToPath } from "url";
 
-var { css, addDiv } = require("./tag-helpers");
+var { css, addDiv, addButton } = require("./tag-helpers");
 
 // const __filename = fileURLToPath(import.meta.url);
 
@@ -98,6 +98,7 @@ class Game {
       "aspect-ratio": "1 / 1",
       left: "0%",
       "white-space": "pre",
+      padding: "0%",
     };
 
     this.stylesEmptyCells = {
@@ -107,6 +108,7 @@ class Game {
       left: "0%",
       "white-space": "pre",
       background: "blue",
+      padding: "0%",
     };
 
     this.stylesShipCells = {
@@ -116,6 +118,7 @@ class Game {
       left: "0%",
       "white-space": "pre",
       background: "grey",
+      padding: "0%",
     };
 
     this.stylesHitCells = {
@@ -125,6 +128,7 @@ class Game {
       left: "0%",
       "white-space": "pre",
       background: "red",
+      padding: "0%",
     };
 
     this.stylesMissCells = {
@@ -134,6 +138,7 @@ class Game {
       left: "0%",
       "white-space": "pre",
       background: "green",
+      padding: "0%",
     };
 
     this.stylesCells = {
@@ -176,94 +181,9 @@ class Game {
       display: "inline-table",
       border: "0px",
     };
-  }
-
-  renderGrid(array, styles = {}) {
-    return addDiv(
-      array
-        .map((a) =>
-          addDiv(
-            `${" ".repeat(2 - a.toString().length)}${
-              a in this.stylesCells ? " " : a
-            }`,
-            css(this.stylesCells[a] ?? this.stylesBaseCells)
-          )
-        )
-        .join(""),
-      css(styles)
-    );
-  }
-
-  renderBattleField(BattleFieldCells) {
-    return addDiv(
-      `${this.renderGrid(
-        Object.values(BattleFieldCells).map((item) => item),
-        this.stylesBattleFieldGrid
-      )}`,
-      css(this.stylesContainer)
-    );
-  }
-
-  renderBattleFieldWithCoordinates(BattleFieldCells) {
-    let xCoordinateLine = this.renderGrid(
-      Array.from({ length: 10 }, (x, i) => i + 1),
-      this.horizontalCoordinateGrid
-    );
-    let battleFieldWithYCoordinateLine = `${this.renderGrid(
-      "abcdefghij".split(""),
-      this.verticalCoordinateGrid
-    )}${this.renderBattleField(BattleFieldCells)}`;
-
-    return `${xCoordinateLine}${addDiv(
-      `${battleFieldWithYCoordinateLine}`,
-      css(this.stylesBattleFieldWithCoordinates)
-    )}`;
-  }
-
-  renderShipStats(shipDict = {}) {
-    this.stylesShipLine["grid-template-columns"] = "repeat(1, auto)";
-    this.stylesShipNumber["width"] = "84.375%";
-    let patrolBoat = `${this.renderGrid(
-      Array.from({ length: 1 }, (x, i) => 0),
-      this.stylesShipLine
-    )}${addDiv(shipDict["patrolBoat"] ?? 4, css(this.stylesShipNumber))}`;
-
-    this.stylesShipLine["grid-template-columns"] = "repeat(2, auto)";
-    this.stylesShipNumber["width"] = "68.75%";
-    let submarine = `${this.renderGrid(
-      Array.from({ length: 2 }, (x, i) => 0),
-      this.stylesShipLine
-    )}${addDiv(shipDict["submarine"] ?? 3, css(this.stylesShipNumber))}`;
-    this.stylesShipLine["grid-template-columns"] = "repeat(3, auto)";
-    this.stylesShipNumber["width"] = "53.125%";
-    let destroyer = `${this.renderGrid(
-      Array.from({ length: 3 }, (x, i) => 0),
-      this.stylesShipLine
-    )}${addDiv(shipDict["destroyer"] ?? 2, css(this.stylesShipNumber))}`;
-    this.stylesShipLine["grid-template-columns"] = "repeat(4, auto)";
-    this.stylesShipNumber["width"] = "37.5%";
-    let battleship = `${this.renderGrid(
-      Array.from({ length: 4 }, (x, i) => 0),
-      this.stylesShipLine
-    )}${addDiv(shipDict["battleship"] ?? 1, css(this.stylesShipNumber))}`;
-
-    return `
-    ${addDiv(patrolBoat, css(this.stylesShipStats))}
-    ${addDiv(submarine, css(this.stylesShipStats))}
-    ${addDiv(destroyer, css(this.stylesShipStats))}
-    ${addDiv(battleship, css(this.stylesShipStats))}
-      `;
-  }
-
-  renderGame() {
-    let shipDict = {
-      patrolBoat: 4,
-      submarine: 3,
-      destroyer: 2,
-      battleship: 1,
-    };
-
-    let BattleFieldCells = {
+    this.isNewGame = false;
+    this.isGameStarts = false;
+    this.BattleFieldCells = {
       "1 1": " ",
       "1 2": " ",
       "1 3": " ",
@@ -365,20 +285,145 @@ class Game {
       "10 9": " ",
       "10 10": " ",
     };
+    this.tmpShipCoordinates = [];
+  }
+
+  renderCell(value, key = "", isNeedButtons = false) {
+    return isNeedButtons == true && [" ", ""].includes(value)
+      ? addButton(
+          value in this.stylesCells ? " " : value,
+          "/",
+          "coordinate",
+          key,
+          css(this.stylesCells[value] ?? this.stylesBaseCells)
+        )
+      : addDiv(
+          `${" ".repeat(2 - value.toString().length)}${
+            value in this.stylesCells ? " " : value
+          }`,
+          css(this.stylesCells[value] ?? this.stylesBaseCells)
+        );
+  }
+
+  renderGrid(obj, isNeedButtons, styles = {}) {
+    if (Array.isArray(obj)) {
+      return addDiv(
+        Object.values(obj)
+          .map((item) => item)
+          .map((value) => this.renderCell(value))
+          .join(""),
+        css(styles)
+      );
+    } else {
+      return addDiv(
+        Object.keys(obj)
+          .map((item) => item)
+          .map((key) => this.renderCell(obj[key], key, isNeedButtons))
+          .join(""),
+        css(styles)
+      );
+    }
+  }
+
+  renderBattleField(BattleFieldCells, isNeedButtons) {
+    return addDiv(
+      `${this.renderGrid(
+        BattleFieldCells,
+        isNeedButtons,
+        this.stylesBattleFieldGrid
+      )}`,
+      css(this.stylesContainer)
+    );
+  }
+
+  renderBattleFieldWithCoordinates(BattleFieldCells, isNeedButtons) {
+    let xCoordinateLine = this.renderGrid(
+      Array.from({ length: 10 }, (x, i) => i + 1),
+      false,
+      this.horizontalCoordinateGrid
+    );
+    let battleFieldWithYCoordinateLine = `${this.renderGrid(
+      "abcdefghij".split(""),
+      false,
+      this.verticalCoordinateGrid
+    )}${this.renderBattleField(BattleFieldCells, isNeedButtons)}`;
+
+    return `${xCoordinateLine}${addDiv(
+      `${battleFieldWithYCoordinateLine}`,
+      css(this.stylesBattleFieldWithCoordinates)
+    )}`;
+  }
+
+  renderShipStats(shipDict = {}) {
+    this.stylesShipLine["grid-template-columns"] = "repeat(1, auto)";
+    this.stylesShipNumber["width"] = "84.375%";
+    let patrolBoat = `${this.renderGrid(
+      Array.from({ length: 1 }, (x, i) => 0),
+      false,
+      this.stylesShipLine
+    )}${addDiv(shipDict["patrolBoat"] ?? 4, css(this.stylesShipNumber))}`;
+    this.stylesShipLine["grid-template-columns"] = "repeat(2, auto)";
+    this.stylesShipNumber["width"] = "68.75%";
+    let submarine = `${this.renderGrid(
+      Array.from({ length: 2 }, (x, i) => 0),
+      false,
+      this.stylesShipLine
+    )}${addDiv(shipDict["submarine"] ?? 3, css(this.stylesShipNumber))}`;
+    this.stylesShipLine["grid-template-columns"] = "repeat(3, auto)";
+    this.stylesShipNumber["width"] = "53.125%";
+    let destroyer = `${this.renderGrid(
+      Array.from({ length: 3 }, (x, i) => 0),
+      false,
+      this.stylesShipLine
+    )}${addDiv(shipDict["destroyer"] ?? 2, css(this.stylesShipNumber))}`;
+    this.stylesShipLine["grid-template-columns"] = "repeat(4, auto)";
+    this.stylesShipNumber["width"] = "37.5%";
+    let battleship = `${this.renderGrid(
+      Array.from({ length: 4 }, (x, i) => 0),
+      false,
+      this.stylesShipLine
+    )}${addDiv(shipDict["battleship"] ?? 1, css(this.stylesShipNumber))}`;
+
+    return `
+    ${addDiv(patrolBoat, css(this.stylesShipStats))}
+    ${addDiv(submarine, css(this.stylesShipStats))}
+    ${addDiv(destroyer, css(this.stylesShipStats))}
+    ${addDiv(battleship, css(this.stylesShipStats))}
+      `;
+  }
+
+  renderGamePage(isNeedButtons) {
+    let shipDict = {
+      patrolBoat: 4,
+      submarine: 3,
+      destroyer: 2,
+      battleship: 1,
+    };
 
     this.$app = "";
+    let setShipButton =
+      isNeedButtons == true
+        ? addButton("Set ship", "/", "setShip", "true")
+        : "";
+
     this.$app += addDiv(
-      `<p>player ships</p>${this.renderShipStats(shipDict)}`,
+      `${setShipButton}<p>player ships</p>${this.renderShipStats(shipDict)}`,
       css(this.stylesStats)
     );
 
     this.$app += addDiv(
-      `<p>player</p>${this.renderBattleFieldWithCoordinates(BattleFieldCells)}`,
+      `<p>player</p>${this.renderBattleFieldWithCoordinates(
+        this.BattleFieldCells,
+        isNeedButtons
+      )}`,
       css(this.stylesBattleField)
     );
 
     this.$app += addDiv(
-      `<p>enemy</p>${this.renderBattleFieldWithCoordinates(BattleFieldCells)}`,
+      `<p>enemy</p>${this.renderBattleFieldWithCoordinates(
+        this.BattleFieldCells,
+        !isNeedButtons
+      )}`,
       css(this.stylesBattleField)
     );
 
@@ -386,13 +431,66 @@ class Game {
       `<p>enemy ships</p>${this.renderShipStats(shipDict)}`,
       css(this.stylesStats)
     );
+    return (
+      addDiv(this.$app, css({ margin: "5% 0% 5% 0%" })) +
+      addButton("End game", "/", "endGame", "true")
+    );
+  }
 
-    // console.log(this.$app);
+  renderStartPage() {
+    return (
+      addButton("New game", "/", "newGame", "true") +
+      addDiv("", css({ margin: "5%", border: "0px" })) +
+      addButton("End game", "/", "endGame", "true")
+    );
+  }
 
-    return addDiv(this.$app);
+  renderPreparationPage() {
+    return (
+      addButton("Start game", "/", "game", "true") + this.renderGamePage(true)
+    );
+  }
+
+  render() {
+    let content = `<form method="post" id="myForm"></form>`;
+    if (this.isNewGame == false) {
+      return content + this.renderStartPage();
+    } else if (this.isGameStarts == false) {
+      return content + this.renderPreparationPage();
+    } else {
+      return content + this.renderGamePage(false);
+    }
+  }
+
+  addShipCoordinate(coordinate) {
+    console.log(this.tmpShipCoordinates.includes(coordinate));
+    if (this.tmpShipCoordinates.includes(coordinate)) {
+      this.tmpShipCoordinates.splice(
+        this.tmpShipCoordinates.indexOf(coordinate),
+        1
+      );
+      this.BattleFieldCells[coordinate] = " ";
+    } else {
+      this.tmpShipCoordinates.push(coordinate);
+      this.BattleFieldCells[coordinate] = "";
+    }
+    console.log(coordinate, this.tmpShipCoordinates);
+  }
+
+  setShipCoordinates() {
+    this.tmpShipCoordinates.forEach((coordinate) => {
+      this.BattleFieldCells[coordinate] = 0;
+    });
+    this.tmpShipCoordinates = [];
+  }
+
+  shoot(coordinate) {
+    this.BattleFieldCells[coordinate] = "*";
   }
 }
 
+let myGame = new Game();
+
 module.exports = {
-  Game,
+  myGame,
 };
