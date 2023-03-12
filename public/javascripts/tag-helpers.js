@@ -8,7 +8,15 @@ function addDiv(content, styles = "") {
   return `<div style="${styles}">${content}</div>`;
 }
 
+function addButton(content, formation, name, value, styles = "") {
+  return `<button 
+  type="submit"
+   formaction="${formation}" 
+   style="${styles}" name="${name}" value="${value}" form="myForm">${content}</button>`;
+}
+
 module.exports = {
   css,
   addDiv,
+  addButton,
 };
