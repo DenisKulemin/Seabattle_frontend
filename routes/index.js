@@ -65,6 +65,18 @@ router.post("/", async function (req, res, next) {
       }
     }
   } else if (req.body.endGame == "true") {
+      let exitInfo = await axios
+      .post(`${BASE_URL}/exit`, {
+        playerId: myGame.playerId,
+        gameId: myGame.gameId,
+      })
+      .then(function (response) {
+        return response.data;
+      })
+      .catch((error) => {
+        myGame.currentError = error.response.data.hint;
+        console.warn(error.response.data);
+      });
     myGame = new Game();
   } else if (req.body.coordinate != undefined && myGame.isGameStarts == false) {
     myGame.addShipCoordinate(req.body.coordinate);
