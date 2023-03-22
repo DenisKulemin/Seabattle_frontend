@@ -9,3 +9,5 @@ services:
       - ./../:/home/app
     ports:
       - "8081:8081"
+    environment:
+      - BASE_URL=${BASE_URL}

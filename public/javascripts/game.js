@@ -1,30 +1,7 @@
-// import { css, addDiv } from "./tag-helpers.js";
-// import { css, addDiv } from "./../public/javascripts/tag-helpers";
-// import { JSDOM } from "jsdom";
-// import fs from "fs";
-// import path from "path";
-
-// import { fileURLToPath } from "url";
-
 var { css, addDiv, addButton } = require("./tag-helpers");
-
-// const __filename = fileURLToPath(import.meta.url);
-
-// const __dirname = path.dirname(__filename);
-
-// const jsdom = require("jsdom");
-// const { JSDOM } = jsdom;
-
-// const html = fs.readFileSync(path.resolve(__dirname, "../index.html"), "utf8");
-
-// let page = new JSDOM(html, {
-//   resources: "usable",
-//   runScripts: "dangerously",
-// });
 
 class Game {
   constructor() {
-    // this.$app = page.window.document.querySelector("#app");
     this.$app = "";
 
     this.stylesStats = {
@@ -183,118 +160,29 @@ class Game {
     };
     this.isNewGame = false;
     this.isGameStarts = false;
-    this.BattleFieldCells = {
-      "1 1": " ",
-      "1 2": " ",
-      "1 3": " ",
-      "1 4": " ",
-      "1 5": " ",
-      "1 6": "0",
-      "1 7": " ",
-      "1 8": " ",
-      "1 9": " ",
-      "1 10": " ",
-      "2 1": " ",
-      "2 2": " ",
-      "2 3": " ",
-      "2 4": " ",
-      "2 5": " ",
-      "2 6": "0",
-      "2 7": " ",
-      "2 8": " ",
-      "2 9": " ",
-      "2 10": " ",
-      "3 1": "X",
-      "3 2": " ",
-      "3 3": " ",
-      "3 4": " ",
-      "3 5": " ",
-      "3 6": "0",
-      "3 7": " ",
-      "3 8": " ",
-      "3 9": " ",
-      "3 10": " ",
-      "4 1": " ",
-      "4 2": " ",
-      "4 3": " ",
-      "4 4": " ",
-      "4 5": " ",
-      "4 6": " ",
-      "4 7": " ",
-      "4 8": "0",
-      "4 9": " ",
-      "4 10": " ",
-      "5 1": " ",
-      "5 2": " ",
-      "5 3": " ",
-      "5 4": " ",
-      "5 5": " ",
-      "5 6": "0",
-      "5 7": " ",
-      "5 8": " ",
-      "5 9": " ",
-      "5 10": " ",
-      "6 1": " ",
-      "6 2": " ",
-      "6 3": " ",
-      "6 4": " ",
-      "6 5": " ",
-      "6 6": "*",
-      "6 7": " ",
-      "6 8": " ",
-      "6 9": " ",
-      "6 10": " ",
-      "7 1": " ",
-      "7 2": " ",
-      "7 3": " ",
-      "7 4": " ",
-      "7 5": " ",
-      "7 6": " ",
-      "7 7": " ",
-      "7 8": " ",
-      "7 9": "*",
-      "7 10": " ",
-      "8 1": " ",
-      "8 2": " ",
-      "8 3": " ",
-      "8 4": " ",
-      "8 5": " ",
-      "8 6": "*",
-      "8 7": " ",
-      "8 8": " ",
-      "8 9": " ",
-      "8 10": " ",
-      "9 1": " ",
-      "9 2": " ",
-      "9 3": " ",
-      "9 4": " ",
-      "9 5": " ",
-      "9 6": "0",
-      "9 7": " ",
-      "9 8": " ",
-      "9 9": " ",
-      "9 10": " ",
-      "10 1": " ",
-      "10 2": " ",
-      "10 3": " ",
-      "10 4": " ",
-      "10 5": " ",
-      "10 6": "0",
-      "10 7": " ",
-      "10 8": " ",
-      "10 9": " ",
-      "10 10": " ",
-    };
+    this.isPlayerMove = false;
+    this.isGameOver = false;
+    this.gameId = "";
+    this.playerId = "";
+    this.currentError = "";
+    this.playerBattleFieldCells = {};
+    this.playerFleet = {};
+    this.enemyBattleFieldCells = {};
+    this.enemyFleet = {};
     this.tmpShipCoordinates = [];
+    this.playerName = "Player";
+    this.enemyName = "Enemy";
+    this.winner = "";
   }
 
   renderCell(value, key = "", isNeedButtons = false) {
-    return isNeedButtons == true && [" ", ""].includes(value)
+    return isNeedButtons == true
       ? addButton(
-          value in this.stylesCells ? " " : value,
+          "  ",
           "/",
           "coordinate",
           key,
+          [" ", ""].includes(value) ? "" : "disabled",
           css(this.stylesCells[value] ?? this.stylesBaseCells)
         )
       : addDiv(
@@ -393,13 +281,6 @@ class Game {
   }
 
   renderGamePage(isNeedButtons) {
-    let shipDict = {
-      patrolBoat: 4,
-      submarine: 3,
-      destroyer: 2,
-      battleship: 1,
-    };
-
     this.$app = "";
     let setShipButton =
       isNeedButtons == true
@@ -407,28 +288,30 @@ class Game {
         : "";
 
     this.$app += addDiv(
-      `${setShipButton}<p>player ships</p>${this.renderShipStats(shipDict)}`,
+      `${setShipButton}<p>player ships</p>${this.renderShipStats(
+        this.playerFleet
+      )}`,
       css(this.stylesStats)
     );
 
     this.$app += addDiv(
-      `<p>player</p>${this.renderBattleFieldWithCoordinates(
-        this.BattleFieldCells,
+      `<p>${this.playerName}</p>${this.renderBattleFieldWithCoordinates(
+        this.playerBattleFieldCells,
         isNeedButtons
       )}`,
       css(this.stylesBattleField)
     );
 
     this.$app += addDiv(
-      `<p>enemy</p>${this.renderBattleFieldWithCoordinates(
-        this.BattleFieldCells,
+      `<p>${this.enemyName}</p>${this.renderBattleFieldWithCoordinates(
+        this.enemyBattleFieldCells,
         !isNeedButtons
       )}`,
       css(this.stylesBattleField)
     );
 
     this.$app += addDiv(
-      `<p>enemy ships</p>${this.renderShipStats(shipDict)}`,
+      `<p>enemy ships</p>${this.renderShipStats(this.enemyFleet)}`,
       css(this.stylesStats)
     );
     return (
@@ -447,18 +330,42 @@ class Game {
 
   renderPreparationPage() {
     return (
-      addButton("Start game", "/", "game", "true") + this.renderGamePage(true)
+      addButton("Start game", "/", "game", "true") +
+      this.renderGamePage(true) +
+      addDiv(
+        "Hint: To add ship you need to click on player's battlefield (on each sell were should be your ship). " +
+          "This cell became white. If you need unset any cell that you choose, just click on it one more time " +
+          "(it became blue again). When you've done with choosing cells for a ship - push 'Set ship' button. If " +
+          " something with your choise wrong - you will see a hint with information, what goes wrong. Remember, you " +
+          "can set 4 patrol boats (one cell), 3 submarines (2 cells), 2 destroyers (3 cells) and one battleship (4 cells)." +
+          " After adding all ships - press 'Start game' button.",
+        css({ margin: "5% 0% 5% 0%" })
+      )
     );
   }
 
   render() {
     let content = `<form method="post" id="myForm"></form>`;
+    if (this.currentError != "") {
+      content += addDiv(this.currentError);
+      this.currentError = "";
+    }
     if (this.isNewGame == false) {
       return content + this.renderStartPage();
     } else if (this.isGameStarts == false) {
       return content + this.renderPreparationPage();
     } else {
-      return content + this.renderGamePage(false);
+      return (
+        content +
+        this.renderGamePage(false) +
+        addDiv(
+          "Hint: Enemy response takes just a moment, so you can at any time (because enemy is already made all its moves). " +
+            "To shoot, choose cell on eneme battlefield and press it. It you see red cell - you hit the ship, if green - you miss. " +
+            "Game is automatically updates area around hitted ships (mark sells as green in area where cannot be other ships). " +
+            "When someone wins, you will see the note above with this information and the name of winner.",
+          css({ margin: "5% 0% 5% 0%" })
+        )
+      );
     }
   }
 
@@ -469,23 +376,60 @@ class Game {
         this.tmpShipCoordinates.indexOf(coordinate),
         1
       );
-      this.BattleFieldCells[coordinate] = " ";
+      this.playerBattleFieldCells[coordinate] = " ";
     } else {
       this.tmpShipCoordinates.push(coordinate);
-      this.BattleFieldCells[coordinate] = "";
+      this.playerBattleFieldCells[coordinate] = "";
     }
-    console.log(coordinate, this.tmpShipCoordinates);
   }
 
-  setShipCoordinates() {
-    this.tmpShipCoordinates.forEach((coordinate) => {
-      this.BattleFieldCells[coordinate] = 0;
-    });
+  setShipCoordinates(shipInfo) {
+    this.playerBattleFieldCells = Object.assign(
+      {},
+      this.playerBattleFieldCells,
+      this.convertCoordinatesToFront(shipInfo["playerShipCells"])
+    );
+    this.playerFleet = shipInfo["playerFleet"];
     this.tmpShipCoordinates = [];
   }
 
-  shoot(coordinate) {
-    this.BattleFieldCells[coordinate] = "*";
+  convertCoordinatesToFront(coordinates) {
+    console.log(coordinates);
+    let frontCoordinates = {};
+    Object.values(coordinates).map(
+      (item) =>
+        (frontCoordinates[item.x.toString() + " " + item.y.toString()] =
+          item.sign)
+    );
+    console.log(frontCoordinates);
+    return frontCoordinates;
+  }
+
+  convertCoordinatesToBack(coordinates) {
+    let backCoordinates = [];
+    Object.values(coordinates).map((item) =>
+      backCoordinates.push(item.split(" "))
+    );
+
+    return backCoordinates;
+  }
+
+  setGameInfo(gameInfo) {
+    this.gameId = gameInfo["gameId"];
+    this.playerId = gameInfo["playerId"];
+    this.playerBattleFieldCells = this.convertCoordinatesToFront(
+      gameInfo["playerBattleFieldCells"]
+    );
+    this.playerFleet = gameInfo["playerFleet"];
+    this.enemyBattleFieldCells = this.convertCoordinatesToFront(
+      gameInfo["enemyBattleFieldCells"]
+    );
+    this.enemyFleet = gameInfo["enemyFleet"];
+    this.isPlayerMove = gameInfo["isPlayerMove"];
+    this.isGameOver = gameInfo["isGameOver"];
+    if (this.isGameOver == true) {
+      this.winner = gameInfo["winner"];
+    }
   }
 }
 
@@ -493,4 +437,5 @@ let myGame = new Game();
 
 module.exports = {
   myGame,
+  Game,
 };

@@ -1,7 +1,11 @@
 var express = require("express");
 var router = express.Router();
 
-var { myGame } = require("./../public/javascripts/game.js");
+var { myGame, Game } = require("./../public/javascripts/game.js");
+
+const BASE_URL = process.env.BASE_URL;
+
+const axios = require("axios");
 
 /* GET home page. */
 router.get("/", function (req, res, next) {
@@ -9,21 +13,122 @@ router.get("/", function (req, res, next) {
   res.render("index", { title: "Game", game: gameField });
 });
 
-router.post("/", function (req, res, next) {
-  console.log(req.body);
+router.post("/", async function (req, res, next) {
+  let hint = "";
   if (req.body.newGame == "true") {
-    myGame.isNewGame = true;
+    let gameInfo = await axios
+      .post(`${BASE_URL}/new-game`)
+      .then(function (response) {
+        return response.data;
+      })
+      .catch((error) => {
+        myGame.currentError = error.response.data.hint;
+        console.warn(error.response.data);
+      });
+    if (gameInfo != undefined) {
+      myGame.isNewGame = true;
+      myGame.setGameInfo(gameInfo);
+    }
   } else if (req.body.game == "true") {
-    myGame.isGameStarts = true;
+    let gameInfo = await axios
+      .post(`${BASE_URL}/game-start`, {
+        playerId: myGame.playerId,
+        gameId: myGame.gameId,
+      })
+      .then(function (response) {
+        return response.data;
+      })
+      .catch((error) => {
+        myGame.currentError = error.response.data.hint;
+        console.warn(error.response.data);
+      });
+    if (gameInfo != undefined) {
+      myGame.isGameStarts = true;
+      myGame.setGameInfo(gameInfo);
+    }
+
+    if (!myGame.isPlayerMove) {
+      let shootInfo = await axios
+        .post(`${BASE_URL}/enemy-shoot`, {
+          playerId: myGame.playerId,
+          gameId: myGame.gameId,
+        })
+        .then(function (response) {
+          return response.data;
+        })
+        .catch((error) => {
+          myGame.currentError = error.response.data.hint;
+          console.warn(error.response.data);
+        });
+      if (shootInfo != undefined) {
+        myGame.setGameInfo(shootInfo);
+      }
+    }
   } else if (req.body.endGame == "true") {
-    myGame.isGameStarts = false;
-    myGame.isNewGame = false;
+    myGame = new Game();
   } else if (req.body.coordinate != undefined && myGame.isGameStarts == false) {
     myGame.addShipCoordinate(req.body.coordinate);
   } else if (req.body.coordinate != undefined && myGame.isGameStarts == true) {
-    myGame.shoot(req.body.coordinate);
+    let shootInfo = await axios
+      .post(`${BASE_URL}/player-shoot`, {
+        playerId: myGame.playerId,
+        gameId: myGame.gameId,
+        coordinate: myGame.convertCoordinatesToBack([req.body.coordinate])[0],
+      })
+      .then(function (response) {
+        return response.data;
+      })
+      .catch((error) => {
+        myGame.currentError = error.response.data.hint;
+        console.warn(error.response.data);
+      });
+    if (shootInfo != undefined) {
+      myGame.setGameInfo(shootInfo);
+    }
+
+    while (!myGame.isPlayerMove && !myGame.isGameOver) {
+      let shootInfo = await axios
+        .post(`${BASE_URL}/enemy-shoot`, {
+          playerId: myGame.playerId,
+          gameId: myGame.gameId,
+        })
+        .then(function (response) {
+          return response.data;
+        })
+        .catch((error) => {
+          myGame.currentError = error.response.data.hint;
+          console.warn(error.response.data);
+        });
+      if (shootInfo != undefined) {
+        myGame.setGameInfo(shootInfo);
+      }
+    }
   } else if (req.body.setShip == "true") {
-    myGame.setShipCoordinates();
+    let shipInfo = await axios
+      .post(`${BASE_URL}/new-ship`, {
+        playerId: myGame.playerId,
+        gameId: myGame.gameId,
+        coordinates: myGame.convertCoordinatesToBack(myGame.tmpShipCoordinates),
+      })
+      .then(function (response) {
+        return response.data;
+      })
+      .catch((error) => {
+        myGame.currentError = error.response.data.hint;
+        console.warn(error.response.data);
+      });
+    if (shipInfo != undefined) {
+      if (shipInfo.statusCode == undefined) {
+        myGame.setShipCoordinates(shipInfo);
+      } else {
+        myGame.currentError = shipInfo.errorCode;
+      }
+    }
+  }
+
+  if (myGame.isGameOver == true) {
+    myGame.currentError = `Game is over.<br><b>${myGame.winner}</b> is a winner!
+    <br>Press "End game" button to quit.`;
   }
   res.render("index", { title: "Game", game: myGame.render() });
 });
