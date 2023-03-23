@@ -8,13 +8,14 @@ const BASE_URL = process.env.BASE_URL;
 const axios = require("axios");
 
 /* GET home page. */
+// eslint-disable-next-line
 router.get("/", function (req, res, next) {
   let gameField = myGame.render();
   res.render("index", { title: "Game", game: gameField });
 });
 
+// eslint-disable-next-line
 router.post("/", async function (req, res, next) {
-  let hint = "";
   if (req.body.newGame == "true") {
     let gameInfo = await axios
       .post(`${BASE_URL}/new-game`)
@@ -65,7 +66,7 @@ router.post("/", async function (req, res, next) {
       }
     }
   } else if (req.body.endGame == "true") {
-      let exitInfo = await axios
+    await axios
       .post(`${BASE_URL}/exit`, {
         playerId: myGame.playerId,
         gameId: myGame.gameId,

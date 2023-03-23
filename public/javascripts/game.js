@@ -226,7 +226,7 @@ class Game {
 
   renderBattleFieldWithCoordinates(BattleFieldCells, isNeedButtons) {
     let xCoordinateLine = this.renderGrid(
-      Array.from({ length: 10 }, (x, i) => i + 1),
+      Array.from({ length: 10 }, (_, i) => i + 1),
       false,
       this.horizontalCoordinateGrid
     );
@@ -246,28 +246,28 @@ class Game {
     this.stylesShipLine["grid-template-columns"] = "repeat(1, auto)";
     this.stylesShipNumber["width"] = "84.375%";
     let patrolBoat = `${this.renderGrid(
-      Array.from({ length: 1 }, (x, i) => 0),
+      Array.from({ length: 1 }, () => 0),
       false,
       this.stylesShipLine
     )}${addDiv(shipDict["patrolBoat"] ?? 4, css(this.stylesShipNumber))}`;
     this.stylesShipLine["grid-template-columns"] = "repeat(2, auto)";
     this.stylesShipNumber["width"] = "68.75%";
     let submarine = `${this.renderGrid(
-      Array.from({ length: 2 }, (x, i) => 0),
+      Array.from({ length: 2 }, () => 0),
       false,
       this.stylesShipLine
     )}${addDiv(shipDict["submarine"] ?? 3, css(this.stylesShipNumber))}`;
     this.stylesShipLine["grid-template-columns"] = "repeat(3, auto)";
     this.stylesShipNumber["width"] = "53.125%";
     let destroyer = `${this.renderGrid(
-      Array.from({ length: 3 }, (x, i) => 0),
+      Array.from({ length: 3 }, () => 0),
       false,
       this.stylesShipLine
     )}${addDiv(shipDict["destroyer"] ?? 2, css(this.stylesShipNumber))}`;
     this.stylesShipLine["grid-template-columns"] = "repeat(4, auto)";
     this.stylesShipNumber["width"] = "37.5%";
     let battleship = `${this.renderGrid(
-      Array.from({ length: 4 }, (x, i) => 0),
+      Array.from({ length: 4 }, () => 0),
       false,
       this.stylesShipLine
     )}${addDiv(shipDict["battleship"] ?? 1, css(this.stylesShipNumber))}`;
@@ -362,7 +362,7 @@ class Game {
           "Hint: Enemy response takes just a moment, so you can at any time (because enemy is already made all its moves). " +
             "To shoot, choose cell on eneme battlefield and press it. It you see red cell - you hit the ship, if green - you miss. " +
             "Game is automatically updates area around hitted ships (mark sells as green in area where cannot be other ships). " +
-            "When someone wins, you will see the note above with this information and the name of winner.",
+            "When someone wins, you will see the note above with this information and the name of winner. ",
           css({ margin: "5% 0% 5% 0%" })
         )
       );
@@ -370,7 +370,6 @@ class Game {
   }
 
   addShipCoordinate(coordinate) {
-    console.log(this.tmpShipCoordinates.includes(coordinate));
     if (this.tmpShipCoordinates.includes(coordinate)) {
       this.tmpShipCoordinates.splice(
         this.tmpShipCoordinates.indexOf(coordinate),
@@ -394,14 +393,12 @@ class Game {
   }
 
   convertCoordinatesToFront(coordinates) {
-    console.log(coordinates);
     let frontCoordinates = {};
     Object.values(coordinates).map(
       (item) =>
         (frontCoordinates[item.x.toString() + " " + item.y.toString()] =
           item.sign)
     );
-    console.log(frontCoordinates);
     return frontCoordinates;
   }
 
