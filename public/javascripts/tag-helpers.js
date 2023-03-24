@@ -16,10 +16,7 @@ function addButton(
   disabled = "",
   styles = ""
 ) {
-  return `<button 
-  type="submit"
-   formaction="${formation}" 
-   style="${styles}" name="${name}" value="${value}" ${disabled} form="myForm">${content}</button>`;
+  return `<button type="submit" formaction="${formation}" style="${styles}" name="${name}" value="${value}" ${disabled} form="myForm">${content}</button>`;
 }
 
 module.exports = {
